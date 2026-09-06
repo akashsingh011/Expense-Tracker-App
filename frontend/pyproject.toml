@@ -1,0 +1,12 @@
+[project]
+name = "frontend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "extra-streamlit-components>=0.1.81",
+    "httpx>=0.28.1",
+    "streamlit>=1.63.0",
+    "streamlit-cookies-controller>=0.0.4",
+]
