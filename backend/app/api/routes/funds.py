@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import date
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.fund import FundCreate, FundResponse, FundUpdate
-from app.services.fund_service import (create_fund, delete_fund, get_fund,  list_funds, update_fund)
+from app.services.fund_service import (create_fund, delete_fund, get_fund, list_funds, update_fund)
 
 
 router = APIRouter(
@@ -30,10 +33,19 @@ def create_fund_endpoint(fund_data: FundCreate, db: Session = Depends(get_db), c
 
 
 @router.get("", response_model=list[FundResponse],)
-def list_funds_endpoint(db: Session = Depends(get_db), current_user: User = Depends(get_current_user),):
+def list_funds_endpoint(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    source_type: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     return list_funds(
         db=db,
         user_id=current_user.id,
+        start_date=start_date,
+        end_date=end_date,
+        source_type=source_type,
     )
 
 

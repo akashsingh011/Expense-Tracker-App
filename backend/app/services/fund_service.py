@@ -1,3 +1,4 @@
+from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -44,12 +45,22 @@ def create_fund(db: Session, user_id: int, fund_data: FundCreate,) -> Fund:
     return fund
 
 
-def list_funds(db: Session, user_id: int,) -> list[Fund]:
+def list_funds(db: Session, user_id: int, start_date: date | None = None, end_date: date | None = None, source_type: str | None = None,) -> list[Fund]:
     statement = (
         select(Fund)
         .where(Fund.user_id == user_id)
-        .order_by(Fund.date.asc(), Fund.id.asc())
     )
+
+    if start_date:
+        statement = statement.where(Fund.date >= start_date)
+
+    if end_date:
+        statement = statement.where(Fund.date <= end_date)
+
+    if source_type:
+        statement = statement.where(Fund.source_type == source_type)
+
+    statement = statement.order_by(Fund.date.asc(), Fund.id.asc())
 
     return list(db.scalars(statement).all())
 

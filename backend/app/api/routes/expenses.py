@@ -49,19 +49,21 @@ def expense_summary_endpoint( start_date: Date | None = None, end_date: Date | N
 
 
 @router.get("/monthly-summary", response_model=MonthlySummaryResponse,)
-def monthly_summary_endpoint(year: int, month: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user),):
-    if month < 1 or month > 12:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Month must be between 1 and 12",
-        )
-
-    return get_monthly_summary(
+def monthly_summary_endpoint(
+    year: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    entries = get_monthly_summary(
         db=db,
         user_id=current_user.id,
         year=year,
-        month=month,
     )
+
+    return {
+        "year": year,
+        "entries": entries,
+    }
 
 
 @router.get("/{expense_id}", response_model=ExpenseResponse,)
