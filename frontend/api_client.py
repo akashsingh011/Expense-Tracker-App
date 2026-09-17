@@ -260,7 +260,7 @@ class APIClient:
         token: str,
         start_date: str | None = None,
         end_date: str | None = None,
-        category: str | None = None,
+        # category: str | None = None,
     ) -> dict:
         params = {}
 
@@ -270,8 +270,8 @@ class APIClient:
         if end_date:
             params["end_date"] = end_date
 
-        if category:
-            params["category"] = category
+        # if category:
+        #     params["category"] = category
 
         response = httpx.get(
             self._url("/api/v1/expenses/summary"),
@@ -307,11 +307,15 @@ class APIClient:
         self,
         token: str,
         year: int,
+        month: int,
     ) -> dict:
         response = httpx.get(
             self._url("/api/v1/expenses/monthly-summary"),
             headers={"Authorization": f"Bearer {token}"},
-            params={"year": year},
+            params={
+                "year": year,
+                "month": month,
+            },
         )
         response.raise_for_status()
         return response.json()

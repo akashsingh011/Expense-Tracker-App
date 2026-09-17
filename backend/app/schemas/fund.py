@@ -1,4 +1,5 @@
 from datetime import date as Date, datetime
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -12,7 +13,7 @@ class FundCreate(BaseModel):
 class FundUpdate(BaseModel):
     date: Date | None = None
     amount: int | None = Field(default=None, gt=0)
-    source_type: str | None = Field(default=None, max_length=30,)
+    source_type: str | None = Field(default=None, max_length=30)
     note: str | None = None
 
 

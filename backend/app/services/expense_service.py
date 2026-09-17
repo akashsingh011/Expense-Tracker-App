@@ -1,12 +1,17 @@
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 from datetime import date as Date
+
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate
 
 
-def create_expense(db: Session, user_id: int, expense_data: ExpenseCreate,) -> Expense:
+def create_expense(
+    db: Session,
+    user_id: int,
+    expense_data: ExpenseCreate,
+) -> Expense:
     expense = Expense(
         user_id=user_id,
         date=expense_data.date,
@@ -23,7 +28,11 @@ def create_expense(db: Session, user_id: int, expense_data: ExpenseCreate,) -> E
     return expense
 
 
-def get_expense(db: Session, user_id: int, expense_id: int,) -> Expense | None:
+def get_expense(
+    db: Session,
+    user_id: int,
+    expense_id: int,
+) -> Expense | None:
     statement = select(Expense).where(
         Expense.id == expense_id,
         Expense.user_id == user_id,
@@ -32,17 +41,31 @@ def get_expense(db: Session, user_id: int, expense_id: int,) -> Expense | None:
     return db.scalar(statement)
 
 
-def list_expenses(db: Session, user_id: int, start_date: Date | None = None, end_date: Date | None = None, category: str | None = None,) -> list[Expense]:
-    statement = select(Expense).where(Expense.user_id == user_id)
+def list_expenses(
+    db: Session,
+    user_id: int,
+    start_date: Date | None = None,
+    end_date: Date | None = None,
+    category: str | None = None,
+) -> list[Expense]:
+    statement = select(Expense).where(
+        Expense.user_id == user_id
+    )
 
     if start_date is not None:
-        statement = statement.where(Expense.date >= start_date)
+        statement = statement.where(
+            Expense.date >= start_date
+        )
 
     if end_date is not None:
-        statement = statement.where(Expense.date <= end_date)
+        statement = statement.where(
+            Expense.date <= end_date
+        )
 
     if category is not None:
-        statement = statement.where(Expense.category == category)
+        statement = statement.where(
+            func.lower(Expense.category) == category.strip().lower()
+        )
 
     statement = statement.order_by(
         Expense.date.asc(),
@@ -52,7 +75,12 @@ def list_expenses(db: Session, user_id: int, start_date: Date | None = None, end
     return list(db.scalars(statement).all())
 
 
-def update_expense(db: Session, user_id: int, expense_id: int, expense_data: ExpenseUpdate,) -> Expense | None:
+def update_expense(
+    db: Session,
+    user_id: int,
+    expense_id: int,
+    expense_data: ExpenseUpdate,
+) -> Expense | None:
     expense = get_expense(
         db=db,
         user_id=user_id,
@@ -75,7 +103,11 @@ def update_expense(db: Session, user_id: int, expense_id: int, expense_data: Exp
     return expense
 
 
-def delete_expense( db: Session, user_id: int, expense_id: int,) -> bool:
+def delete_expense(
+    db: Session,
+    user_id: int,
+    expense_id: int,
+) -> bool:
     expense = get_expense(
         db=db,
         user_id=user_id,

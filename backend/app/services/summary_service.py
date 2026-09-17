@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session
 from app.models.expense import Expense
 
 
-def get_expense_summary(db: Session, user_id: int, start_date: date | None = None, end_date: date | None = None,) -> dict:
+def get_expense_summary(
+        db: Session, 
+        user_id: int, 
+        start_date: date | None = None, 
+        end_date: date | None = None,
+    ) -> dict:
     statement = select(Expense).where(
         Expense.user_id == user_id
     )

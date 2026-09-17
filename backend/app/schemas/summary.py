@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class CategorySummary(BaseModel):
     total: int
     transactions: int

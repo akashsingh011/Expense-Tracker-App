@@ -1,7 +1,17 @@
 from datetime import date, datetime, timezone
 
-from sqlalchemy import ( CheckConstraint, Date, DateTime, ForeignKey, Index, Integer, String, Text,)
+from sqlalchemy import (
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.core.database import Base
 
 
@@ -25,9 +35,7 @@ class Expense(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True,
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -74,6 +82,10 @@ class Expense(Base):
         nullable=False,
     )
 
-    user: Mapped["User"] = relationship(
-        back_populates="expenses",
-    )
+    user: Mapped["User"] = relationship(back_populates="expenses")
+
+    def __repr__(self) -> str:
+        return (
+            f"<Expense id={self.id} date={self.date} "
+            f"amount={self.amount} category={self.category!r}>"
+        )

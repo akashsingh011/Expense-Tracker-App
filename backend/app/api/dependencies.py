@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import decode_access_token
 from app.models import User
-9
+
 security = HTTPBearer()
 
 def get_current_user(credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)], db: Annotated[Session, Depends(get_db)]) -> User:

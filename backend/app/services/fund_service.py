@@ -1,9 +1,11 @@
 from datetime import date
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.fund import Fund
 from app.schemas.fund import FundCreate, FundUpdate
+
 
 ALLOWED_SOURCE_TYPES = {
     "salary",
@@ -12,6 +14,7 @@ ALLOWED_SOURCE_TYPES = {
     "petty",
     "other",
 }
+
 
 def normalize_source_type(source_type: str) -> str:
     source_type = source_type.strip().lower()
@@ -25,7 +28,11 @@ def normalize_source_type(source_type: str) -> str:
     return source_type
 
 
-def create_fund(db: Session, user_id: int, fund_data: FundCreate,) -> Fund:
+def create_fund(
+    db: Session,
+    user_id: int,
+    fund_data: FundCreate,
+) -> Fund:
     source_type = normalize_source_type(
         fund_data.source_type
     )
@@ -45,27 +52,45 @@ def create_fund(db: Session, user_id: int, fund_data: FundCreate,) -> Fund:
     return fund
 
 
-def list_funds(db: Session, user_id: int, start_date: date | None = None, end_date: date | None = None, source_type: str | None = None,) -> list[Fund]:
-    statement = (
-        select(Fund)
-        .where(Fund.user_id == user_id)
+def list_funds(
+    db: Session,
+    user_id: int,
+    start_date: date | None = None,
+    end_date: date | None = None,
+    source_type: str | None = None,
+) -> list[Fund]:
+    statement = select(Fund).where(
+        Fund.user_id == user_id
     )
 
-    if start_date:
-        statement = statement.where(Fund.date >= start_date)
+    if start_date is not None:
+        statement = statement.where(
+            Fund.date >= start_date
+        )
 
-    if end_date:
-        statement = statement.where(Fund.date <= end_date)
+    if end_date is not None:
+        statement = statement.where(
+            Fund.date <= end_date
+        )
 
     if source_type:
-        statement = statement.where(Fund.source_type == source_type)
+        statement = statement.where(
+            Fund.source_type == source_type.strip().lower()
+        )
 
-    statement = statement.order_by(Fund.date.asc(), Fund.id.asc())
+    statement = statement.order_by(
+        Fund.date.asc(),
+        Fund.id.asc(),
+    )
 
     return list(db.scalars(statement).all())
 
 
-def get_fund(db: Session, user_id: int, fund_id: int,) -> Fund | None:
+def get_fund(
+    db: Session,
+    user_id: int,
+    fund_id: int,
+) -> Fund | None:
     statement = select(Fund).where(
         Fund.id == fund_id,
         Fund.user_id == user_id,
@@ -74,7 +99,12 @@ def get_fund(db: Session, user_id: int, fund_id: int,) -> Fund | None:
     return db.scalar(statement)
 
 
-def update_fund(db: Session, user_id: int, fund_id: int, fund_data: FundUpdate,) -> Fund | None:
+def update_fund(
+    db: Session,
+    user_id: int,
+    fund_id: int,
+    fund_data: FundUpdate,
+) -> Fund | None:
     fund = get_fund(
         db=db,
         user_id=user_id,
@@ -102,7 +132,11 @@ def update_fund(db: Session, user_id: int, fund_id: int, fund_data: FundUpdate,)
     return fund
 
 
-def delete_fund(db: Session, user_id: int, fund_id: int,) -> bool:
+def delete_fund(
+    db: Session,
+    user_id: int,
+    fund_id: int,
+) -> bool:
     fund = get_fund(
         db=db,
         user_id=user_id,

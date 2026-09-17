@@ -1,7 +1,17 @@
 from datetime import date, datetime, timezone
 
-from sqlalchemy import ( CheckConstraint, Date, DateTime, ForeignKey, Index, Integer, String, Text,)
+from sqlalchemy import (
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.core.database import Base
 
 
@@ -25,9 +35,7 @@ class Fund(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True,
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -69,6 +77,10 @@ class Fund(Base):
         nullable=False,
     )
 
-    user: Mapped["User"] = relationship(
-        back_populates="funds",
-    )
+    user: Mapped["User"] = relationship(back_populates="funds")
+
+    def __repr__(self) -> str:
+        return (
+            f"<Fund id={self.id} date={self.date} "
+            f"amount={self.amount} source_type={self.source_type!r}>"
+        )

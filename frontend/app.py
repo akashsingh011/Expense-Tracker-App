@@ -69,8 +69,10 @@ if not is_authenticated():
             submitted = st.form_submit_button("Login")
 
             if submitted:
-                if not email or not password:
-                    login_msg.error("Please enter email and password.")
+                if not email.strip():
+                    login_msg.error("Email is required.")
+                elif not password:
+                    login_msg.error("Password is required.")
                 else:
                     try:
                         login_data = api_client.login(
@@ -114,8 +116,12 @@ if not is_authenticated():
             submitted = st.form_submit_button("Register")
 
             if submitted:
-                if not username or not email or not password:
-                    register_msg.error("Please fill in all fields.")
+                if not username.strip():
+                    register_msg.error("Username is required.")
+                elif not email.strip():
+                    register_msg.error("Email is required.")
+                elif not password:
+                    register_msg.error("Password is required.")
                 elif len(password) < 8:
                     register_msg.error("Password must be at least 8 characters.")
                 else:
@@ -286,7 +292,10 @@ else:
 
             if submitted:
 
-                if not category:
+                if amount <= 0:
+                    st.error("Amount must be greater than ₹0.")
+
+                elif not category.strip():
                     st.error("Please enter a category.")
 
                 else:
@@ -358,16 +367,18 @@ else:
                 df = pd.DataFrame(expenses)
                 display_df = df.copy()
                 display_df = display_df.sort_values(by=["date", "id"], ascending=[False, False],).reset_index(drop=True)
+                display_df.insert(0, "S.No.", range(1, len(display_df) + 1))
                 display_df["delete"] = False
 
                 edited_df = st.data_editor(
                     display_df,
                     width="stretch",
                     hide_index=True,
-                    disabled=["id"],
+                    disabled=["S.No.", "id"],
                     num_rows="fixed",
-                    column_order=["id", "date", "amount", "category", "subcategory", "note", "delete"],
+                    column_order=["S.No.", "date", "amount", "category", "subcategory", "note", "delete"],
                     column_config={
+                        "S.No.": st.column_config.NumberColumn("S.No."),
                         "id": st.column_config.NumberColumn("ID"),
                         "date": st.column_config.TextColumn("Date"),
                         "amount": st.column_config.NumberColumn("Amount (₹)", min_value=1, step=1),
@@ -394,19 +405,33 @@ else:
                     if st.button("💾 Save Changes", type="primary"):
                         try:
                             token = get_token()
-                            for idx in changed_rows.index.tolist():
-                                row = edited_df.iloc[idx]
-                                api_client.update_expense(
-                                    token=token,
-                                    expense_id=int(row["id"]),
-                                    date=row["date"],
-                                    amount=int(row["amount"]),
-                                    category=row["category"],
-                                    subcategory=row["subcategory"] or "",
-                                    note=row["note"] or "",
+
+                            # Validate all changed rows before saving
+                            invalid = [
+                                int(edited_df.iloc[idx]["id"])
+                                for idx in changed_rows.index.tolist()
+                                if int(edited_df.iloc[idx]["amount"]) <= 0
+                            ]
+
+                            if invalid:
+                                save_msg.error(
+                                    f"Amount must be greater than ₹0 for "
+                                    f"expense ID(s): {', '.join(f'#{i}' for i in invalid)}"
                                 )
-                            save_msg.success("Changes saved successfully!")
-                            st.rerun()
+                            else:
+                                for idx in changed_rows.index.tolist():
+                                    row = edited_df.iloc[idx]
+                                    api_client.update_expense(
+                                        token=token,
+                                        expense_id=int(row["id"]),
+                                        date=row["date"],
+                                        amount=int(row["amount"]),
+                                        category=row["category"],
+                                        subcategory=row["subcategory"] or "",
+                                        note=row["note"] or "",
+                                    )
+                                save_msg.success("Changes saved successfully!")
+                                st.rerun()
                         except Exception as error:
                             save_msg.error(f"Failed to save changes: {error}")
 
@@ -477,19 +502,23 @@ else:
             submitted = st.form_submit_button("Add Fund")
 
             if submitted:
-                try:
-                    token = get_token()
-                    api_client.create_fund(
-                        token=token,
-                        date=fund_date.isoformat(),
-                        amount=fund_amount,
-                        source_type=source_type,
-                        note=fund_note,
-                    )
-                    add_fund_msg.success("Fund added successfully!")
-                    st.rerun()
-                except Exception as error:
-                    add_fund_msg.error(f"Failed to add fund: {error}")
+
+                if fund_amount <= 0:
+                    st.error("Amount must be greater than ₹0.")
+                else:
+                    try:
+                        token = get_token()
+                        api_client.create_fund(
+                            token=token,
+                            date=fund_date.isoformat(),
+                            amount=fund_amount,
+                            source_type=source_type,
+                            note=fund_note,
+                        )
+                        add_fund_msg.success("Fund added successfully!")
+                        st.rerun()
+                    except Exception as error:
+                        add_fund_msg.error(f"Failed to add fund: {error}")
 
         # -------------------------------------------------
         # Fund Filters
@@ -541,20 +570,19 @@ else:
             if funds:
                 df = pd.DataFrame(funds)
                 display_df = df.copy()
-                display_df = display_df.sort_values(
-                    by=["date", "id"],
-                    ascending=[False, False],
-                ).reset_index(drop=True)
+                display_df = display_df.sort_values(by=["date", "id"], ascending=[False, False],).reset_index(drop=True)
+                display_df.insert(0, "S.No.", range(1, len(display_df) + 1))
                 display_df["delete"] = False
 
                 edited_fund_df = st.data_editor(
                     display_df,
                     width="stretch",
                     hide_index=True,
-                    disabled=["id"],
+                    disabled=["S.No.", "id"],
                     num_rows="fixed",
-                    column_order=["id", "date", "amount", "source_type", "note", "delete"],
+                    column_order=["S.No.", "date", "amount", "source_type", "note", "delete"],
                     column_config={
+                        "S.No.": st.column_config.NumberColumn("S.No."),
                         "id": st.column_config.NumberColumn("ID"),
                         "date": st.column_config.TextColumn("Date"),
                         "amount": st.column_config.NumberColumn("Amount (₹)", min_value=1, step=1),
@@ -844,61 +872,107 @@ else:
             st.error(f"Failed to load category summary: {error}")
 
 
+        # ---------------- MONTHLY SUMMARY ----------------
         st.divider()
-        st.subheader("📅 Monthly Expenses")
+        st.subheader("Monthly Summary")
 
-        try:
-            token = get_token()
+        available_years = api_client.get_expense_years(token)
 
-            # Get available years from expenses
-            available_years = api_client.get_expense_years(token)
+        if available_years:
+            selected_year = st.selectbox(
+                "Select Year",
+                available_years,
+                key="monthly_summary_year",
+            )
 
-            if available_years:
-                selected_year = st.selectbox(
-                    "Select Year",
-                    options=available_years,
-                    index=0,
-                    key="monthly_summary_year",
-                )
+            monthly_rows = []
 
+            for month in range(1, 13):
                 monthly_data = api_client.get_monthly_expense_summary(
                     token=token,
                     year=selected_year,
+                    month=month,
                 )
 
-                entries = monthly_data.get("entries", [])
-
-                if entries:
-                    MONTH_NAMES = {
-                        1: "January", 2: "February", 3: "March",
-                        4: "April", 5: "May", 6: "June",
-                        7: "July", 8: "August", 9: "September",
-                        10: "October", 11: "November", 12: "December",
+                monthly_rows.append(
+                    {
+                        "Month": date(
+                            selected_year,
+                            month,
+                            1,
+                        ).strftime("%B"),
+                        "Total Expenses": monthly_data["total_expenses"],
+                        "Total Expenses": monthly_data["total_expenses"],
+                        "Transactions": monthly_data["total_transactions"],
                     }
+                )
 
-                    monthly_df = pd.DataFrame(entries)
-                    monthly_df["Month"] = monthly_df["month"].map(MONTH_NAMES)
-                    monthly_df["Total Expenses"] = monthly_df["total_expenses"].apply(
-                        lambda v: f"₹{v:,}"
-                    )
-                    monthly_df["Transactions"] = monthly_df["total_transactions"]
-                    monthly_df = monthly_df[["Month", "Total Expenses", "Transactions"]]
-                    monthly_df = monthly_df.sort_values(
-                        "Month",
-                        key=lambda col: col.map({v: k for k, v in MONTH_NAMES.items()}),
-                        ascending=False,
-                    )
+            monthly_df = pd.DataFrame(monthly_rows)
 
-                    st.dataframe(
-                        monthly_df,
-                        width="stretch",
-                        hide_index=True,
-                    )
-                else:
-                    st.info(f"No expense data for {selected_year}.")
+            st.dataframe(
+                monthly_df,
+                use_container_width=True,
+                hide_index=True,
+            )
 
-            else:
-                st.info("No expenses found to show monthly summary.")
+        else:
+            st.info("No expense data available for monthly summary.")
 
-        except Exception as error:
-            st.error(f"Failed to load monthly summary: {error}")
+
+        # st.subheader("📅 Monthly Expenses")
+
+        # try:
+        #     token = get_token()
+
+        #     # Get available years from expenses
+        #     available_years = api_client.get_expense_years(token)
+
+        #     if available_years:
+        #         selected_year = st.selectbox(
+        #             "Select Year",
+        #             options=available_years,
+        #             index=0,
+        #             key="monthly_summary_year",
+        #         )
+
+        #         monthly_data = api_client.get_monthly_expense_summary(
+        #             token=token,
+        #             year=selected_year,
+        #         )
+
+        #         entries = monthly_data.get("entries", [])
+
+        #         if entries:
+        #             MONTH_NAMES = {
+        #                 1: "January", 2: "February", 3: "March",
+        #                 4: "April", 5: "May", 6: "June",
+        #                 7: "July", 8: "August", 9: "September",
+        #                 10: "October", 11: "November", 12: "December",
+        #             }
+
+        #             monthly_df = pd.DataFrame(entries)
+        #             monthly_df["Month"] = monthly_df["month"].map(MONTH_NAMES)
+        #             monthly_df["Total Expenses"] = monthly_df["total_expenses"].apply(
+        #                 lambda v: f"₹{v:,}"
+        #             )
+        #             monthly_df["Transactions"] = monthly_df["total_transactions"]
+        #             monthly_df = monthly_df[["Month", "Total Expenses", "Transactions"]]
+        #             monthly_df = monthly_df.sort_values(
+        #                 "Month",
+        #                 key=lambda col: col.map({v: k for k, v in MONTH_NAMES.items()}),
+        #                 ascending=False,
+        #             )
+
+        #             st.dataframe(
+        #                 monthly_df,
+        #                 width="stretch",
+        #                 hide_index=True,
+        #             )
+        #         else:
+        #             st.info(f"No expense data for {selected_year}.")
+
+        #     else:
+        #         st.info("No expenses found to show monthly summary.")
+
+        # except Exception as error:
+        #     st.error(f"Failed to load monthly summary: {error}")

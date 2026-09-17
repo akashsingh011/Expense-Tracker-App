@@ -14,8 +14,14 @@ router = APIRouter(
 )
 
 
-@router.get("/balance", response_model=WalletResponse,)
-def wallet_balance_endpoint(db: Session = Depends(get_db), current_user: User = Depends(get_current_user),):
+@router.get(
+    "/balance",
+    response_model=WalletResponse,
+)
+def wallet_balance_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     return get_wallet_balance(
         db=db,
         user_id=current_user.id,

@@ -5,7 +5,7 @@ from app.models.expense import Expense
 from app.models.fund import Fund
 
 
-def get_wallet_balance(db: Session, user_id: int,) -> dict:
+def get_wallet_balance(db: Session, user_id: int) -> dict:
     total_funds = db.scalar(
         select(func.coalesce(func.sum(Fund.amount), 0))
         .where(Fund.user_id == user_id)

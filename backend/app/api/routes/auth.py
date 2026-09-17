@@ -6,19 +6,36 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
 from app.core.database import get_db
-from app.core.security import ( create_access_token, hash_password, verify_password,)
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from app.models import User
-from app.schemas.auth import ( LoginRequest, TokenResponse, UserRegister, UserResponse,)
-
-router =APIRouter(
-    prefix="/auth",
-    tags=["Authentication"]
+from app.schemas.auth import (
+    LoginRequest,
+    TokenResponse,
+    UserRegister,
+    UserResponse,
 )
 
-# Register
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED,)
 
-def register(request: UserRegister, db: Annotated[Session, Depends(get_db)],):
+router = APIRouter(
+    prefix="/auth",
+    tags=["Authentication"],
+)
+
+
+# Register
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def register(
+    request: UserRegister,
+    db: Annotated[Session, Depends(get_db)],
+):
     existing_user = db.scalar(
         select(User).where(
             or_(
@@ -46,10 +63,16 @@ def register(request: UserRegister, db: Annotated[Session, Depends(get_db)],):
 
     return user
 
-# Login
-@router.post("/login", response_model=TokenResponse,)
 
-def login(request: LoginRequest, db: Annotated[Session, Depends(get_db)],):
+# Login
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+)
+def login(
+    request: LoginRequest,
+    db: Annotated[Session, Depends(get_db)],
+):
     user = db.scalar(
         select(User).where(
             User.email == request.email
@@ -71,9 +94,12 @@ def login(request: LoginRequest, db: Annotated[Session, Depends(get_db)],):
         access_token=token,
     )
 
-# Me
-@router.get("/me", response_model=UserResponse,)
 
+# Me
+@router.get(
+    "/me",
+    response_model=UserResponse,
+)
 def get_me(
     current_user: Annotated[
         User,
